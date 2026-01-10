@@ -3,24 +3,24 @@ import template from './node-template.html?raw';
 class TreeNode {
 
 	constructor();
-	constructor(text : string);
-	constructor(text? : string) {
+	constructor(text: string);
+	constructor(text?: string) {
 		this.Xmouse = 0;
 		this.Ymouse = 0;
 
 		if (text == undefined) {
 			text = "";
 		}
-		var content : string = template.replace('{{ text }}', text);
+		var content: string = template.replace('{{ text }}', text);
 
-		this.wrapper= document.createElement('div');
+		this.wrapper = document.createElement('div');
 		this.wrapper.innerHTML = content;
 		this.wrapper.style.position = "absolute"
 		this.wrapper.addEventListener("mousedown", this.startDrag.bind(this))
 		//this.wrapper.onmousedown = this.startDrag;
 	}
 
-	public addToCanvas(canvas : HTMLElement) {
+	public addToCanvas(canvas: HTMLElement) {
 		canvas.insertAdjacentElement("beforeend", this.wrapper);
 	}
 
@@ -60,9 +60,9 @@ class TreeNode {
 		document.removeEventListener("mousemove", this.elementDrag)
 	}
 
-	private wrapper : HTMLDivElement;
-	private Xmouse : number;
-	private Ymouse : number;
+	private wrapper: HTMLDivElement;
+	private Xmouse: number;
+	private Ymouse: number;
 }
 
 
