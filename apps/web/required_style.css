@@ -5,3 +5,9 @@
 	top: 0;
     left: 0;
 }
+.text {
+	resize: none;
+}
+.text.selection-disabled::selection{
+	background: rgba(255, 0, 0, 0);
+}
