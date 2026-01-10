@@ -1,4 +1,7 @@
-.node {
+.tree-node {
 	/* position: absolute; */
+	position: absolute;
 	cursor: move;
+	top: 0;
+    left: 0;
 }
