@@ -2,36 +2,56 @@ import template from './node-template.html?raw';
 import type { SaveSystem } from '../SaveSystem';
 
 class TreeNode implements SaveSystem {
-
+	/**
+	 * Save data representing all of this TreeNode
+	 * @returns Data representing all of this TreeNode
+	 */
 	public save(): JSON {
 		return JSON.parse('{\
 			"name":"test"\
 		}');
 	}
+
+	/**
+	 * Load data into this TreeNode. Overwrites properties of this TreeNode.
+	 * @param data Data to load
+	 */
 	public load(data: JSON): void {
 		throw new Error('Method not implemented.');
 	}
 
-	public addParent(parent: TreeNode) {
+	/**
+	 * Set parent TreeNode. Does NOT call addChild on parent.
+	 * @param parent New parent
+	 */
+	public setParent(parent: TreeNode): void {
 		this.parent = parent;
 		throw new Error('Method not implemented.');
 	}
 
-	public removeParent(parent: TreeNode) {
-		throw new Error('Method not implemented.');
-	}
-
-	public addChild(child: TreeNode) {
-		this.childArea.insertBefore(child.getWrapper(), null);
-		this.children.push(child);
-		child.addParent(this);
+	/**
+	 * Remove parent, does NOT call removeChild on parent
+	 * @param parent Parent to remove
+	 */
+	public removeParent(parent: TreeNode): void {
 		throw new Error('Method not implemented.');
 	}
 
 	/**
-	 * Remove the given child from the this parent. If child is not a child of this TreeNode it is ignored.
+	 * Add a child to this tree. Calls addParent on child.
+	 * @param child Child to add
+	 */
+	public addChild(child: TreeNode): void {
+		this.childArea.insertBefore(child.getWrapper(), null);
+		this.children.push(child);
+		child.setParent(this);
+		throw new Error('Method not implemented.');
+	}
+
+	/**
+	 * Remove the given child from the this parent. Calls removeParent on child. If child is not a child of this TreeNode it is ignored.
 	 * @param child Child to remove
-	 * @returns void
+	 * @returns void, early exit if given child is not a child of this TreeNode
 	 */
 	public removeChild(child: TreeNode): void {
 		if (!this.children.includes(child))
@@ -40,11 +60,11 @@ class TreeNode implements SaveSystem {
 		throw new Error('Method not implemented.');
 	}
 
-	private addToCanvas(canvas: HTMLElement) {
-		canvas.insertAdjacentElement("beforeend", this.wrapper);
-	}
-
 	// lock and unlock text editing
+	/**
+	 * Unlock textArea on double click. Remove highlight and set caret position.
+	 * @param e Mouse event
+	 */
 	private dblClick = (e: MouseEvent) => {
 		e.preventDefault();
 
@@ -59,6 +79,10 @@ class TreeNode implements SaveSystem {
 		this.textArea.removeEventListener("dblclick", this.dblClick)
 	}
 
+	/**
+	 * Lock the textArea when it losses focus
+	 * @param e Focus event
+	 */
 	private lock = (e: FocusEvent) => {
 		this.textArea.removeEventListener("focusout", this.lock)
 		this.textArea.addEventListener("dblclick", this.dblClick)
@@ -68,6 +92,10 @@ class TreeNode implements SaveSystem {
 		this.textArea.classList.toggle("selection-disabled", true);
 	}
 
+	/**
+	 * Track the caret's position in the text before second click and textArea activation.
+	 * @param e Mouse event
+	 */
 	private trackCaretPosition = (e: MouseEvent) => {
 		// Store caret position before dblclick selection happens
 		if (this.textArea.readOnly) {
@@ -76,6 +104,11 @@ class TreeNode implements SaveSystem {
 	}
 
 	//draging
+	/**
+	 * Start dragging this TreeNode. If the textArea for this node is active exit early.
+	 * @param e mouseEvent
+	 * @returns void, early exit if the textArea for this node is active
+	 */
 	private startDrag = (e: MouseEvent) => {
 		if (document.activeElement === this.textArea)
 			return;
@@ -90,6 +123,10 @@ class TreeNode implements SaveSystem {
 		document.addEventListener("mousemove", this.elementDrag)
 	}
 
+	/**
+	 * Drag this TreeNode
+	 * @param e Mouse event
+	 */
 	private elementDrag = (e: MouseEvent) => {
 		e.preventDefault();
 		// calculate the new cursor position:
@@ -103,6 +140,10 @@ class TreeNode implements SaveSystem {
 		this.setPos(this.Xpos, this.Ypos)
 	}
 
+	/**
+	 * Stop dragging this TreeNode
+	 * @param e Mouse event
+	 */
 	private stopDrag = (e: MouseEvent) => {
 		//stop moving when mouse button is released:
 		document.removeEventListener("mouseup", this.stopDrag)
@@ -111,12 +152,21 @@ class TreeNode implements SaveSystem {
 		this.wrapper.focus()
 	}
 
+	/**
+	 * Move this TreeNode to the given position relative to the parent HTML element
+	 * @param x new X position relative to the parent HTML element
+	 * @param y new Y position relative to the parent HTML element
+	 */
 	private setPos(x: number, y: number) {
 		this.wrapper.style.left = x + "px";
 		this.wrapper.style.top = y + "px";
 	}
 
-	//constructor
+	/**
+	 * Create a TreeNode.
+	 * @param canvas Canvas to create this node on.
+	 * @param options Text and position for the TreeNode. Defaults to no text and the center of the screen respectively
+	 */
 	constructor(canvas: HTMLElement, options?: { text?: string; pos?: { x: number; y: number } }) {
 		this.parent = null;
 
@@ -173,22 +223,27 @@ class TreeNode implements SaveSystem {
 		this.textArea.addEventListener("mousedown", this.trackCaretPosition)
 		this.textArea.classList.toggle("selection-disabled", true);
 
-		this.addToCanvas(canvas);
+		canvas.insertAdjacentElement("beforeend", this.wrapper);
 	}
 
-	public getWrapper() {
+	/**
+	 * Getter for the wrapper / root HTML element for this TreeNode
+	 * @returns The wrapper / root HTML element for this TreeNode
+	 */
+	public getWrapper(): HTMLElement {
 		return this.wrapper;
 	}
+
 	// fields
-	private wrapper: HTMLElement;
-	private textArea: HTMLTextAreaElement;
-	private childArea: HTMLElement;
-	private children: TreeNode[];
-	private parent: TreeNode | null;
-	private Xmouse: number;
-	private Ymouse: number;
-	private Xpos: number;
-	private Ypos: number;
+	private wrapper: HTMLElement; // wrapper / root HTML element for this TreeNode (Not this tree as a whole).
+	private textArea: HTMLTextAreaElement; // HTML textarea element
+	private childArea: HTMLElement; // HTML element that holds children
+	private children: TreeNode[]; // Array of child nodes in tree.
+	private parent: TreeNode | null; // Parent in tree. Null when no parent.
+	private Xmouse: number; // X pos of mouse. Initialized at 0
+	private Ymouse: number; // Y pos of mouse. Initialized at 0
+	private Xpos: number; // X pos of TreeNode
+	private Ypos: number; // Y pos of TreeNode
 }
 
 
