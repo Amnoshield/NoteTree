@@ -5,8 +5,18 @@
 	top: 0;
     left: 0;
 }
+.text-wrapper {
+	padding: 0.2em;
+	background-color: black;
+}
 .text {
 	resize: none;
+	field-sizing: content;
+	min-width: 100px;
+	max-width: 200px;
+	min-height: 1lh;
+	display: block;
+	/*max-height: 10lh; /* optional or setting? */
 }
 .text.selection-disabled::selection{
 	background: rgba(255, 0, 0, 0);

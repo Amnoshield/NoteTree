@@ -12,8 +12,32 @@ class TreeNode implements SaveSystem {
 		throw new Error('Method not implemented.');
 	}
 
-	public addChild() {
-		throw new Error("Not implemented yet");
+	public addParent(parent: TreeNode) {
+		this.parent = parent;
+		throw new Error('Method not implemented.');
+	}
+
+	public removeParent(parent: TreeNode) {
+		throw new Error('Method not implemented.');
+	}
+
+	public addChild(child: TreeNode) {
+		this.childArea.insertBefore(child.getWrapper(), null);
+		this.children.push(child);
+		child.addParent(this);
+		throw new Error('Method not implemented.');
+	}
+
+	/**
+	 * Remove the given child from the this parent. If child is not a child of this TreeNode it is ignored.
+	 * @param child Child to remove
+	 * @returns void
+	 */
+	public removeChild(child: TreeNode): void {
+		if (!this.children.includes(child))
+			return;
+		child.removeParent(this);
+		throw new Error('Method not implemented.');
 	}
 
 	private addToCanvas(canvas: HTMLElement) {
@@ -28,7 +52,7 @@ class TreeNode implements SaveSystem {
 
 		this.textArea.readOnly = false;
 		this.textArea.focus()
-  		this.textArea.setSelectionRange(caret, caret);
+		this.textArea.setSelectionRange(caret, caret);
 		this.textArea.classList.toggle("selection-disabled", false);
 
 		this.textArea.addEventListener("focusout", this.lock)
@@ -94,6 +118,8 @@ class TreeNode implements SaveSystem {
 
 	//constructor
 	constructor(canvas: HTMLElement, options?: { text?: string; pos?: { x: number; y: number } }) {
+		this.parent = null;
+
 		var text;
 		var pos;
 		if (options !== undefined) {
@@ -107,7 +133,7 @@ class TreeNode implements SaveSystem {
 			this.Xpos = pos.x;
 			this.Ypos = pos.y;
 		}
-		else if (canvas !== undefined) {
+		else {
 			var Xscreen: number = window.innerWidth / 2;
 			var Yscreen: number = window.innerHeight / 2;
 			var Xcanvas: number = canvas.offsetLeft;
@@ -115,6 +141,8 @@ class TreeNode implements SaveSystem {
 			this.Xpos = Xscreen - Xcanvas;
 			this.Ypos = Yscreen - Ycanvas;
 		}
+
+		this.children = [];
 
 		if (text == undefined)
 			text = "";
@@ -124,28 +152,39 @@ class TreeNode implements SaveSystem {
 		this.Ymouse = 0;
 
 		this.wrapper = document.createElement('div');
+		this.wrapper.setAttribute('class', 'tree-node');
 		this.setPos(this.Xpos, this.Ypos);
 		this.wrapper.innerHTML = content;
 		this.wrapper.style.position = "absolute"
 		this.wrapper.addEventListener("mousedown", this.startDrag)
 
-		var textAreaCheck = this.wrapper.getElementsByTagName('textarea')[0];
+		const textAreaCheck = this.wrapper.getElementsByTagName('textarea')[0];
 		if (textAreaCheck !== undefined) // This should always pass
 			this.textArea = textAreaCheck
 		else
 			throw new Error("Error: textarea element not found")
+		const childAreaCheck = this.wrapper.getElementsByClassName("children")[0];
+		if (childAreaCheck !== undefined)
+			this.childArea = <HTMLElement>childAreaCheck;
+		else
+			throw new Error("Children class not found");
 
 		this.textArea.addEventListener('dblclick', this.dblClick)
 		this.textArea.addEventListener("mousedown", this.trackCaretPosition)
 		this.textArea.classList.toggle("selection-disabled", true);
 
-		if (canvas !== undefined)
-			this.addToCanvas(canvas);
+		this.addToCanvas(canvas);
 	}
 
+	public getWrapper() {
+		return this.wrapper;
+	}
 	// fields
-	private wrapper: HTMLDivElement;
+	private wrapper: HTMLElement;
 	private textArea: HTMLTextAreaElement;
+	private childArea: HTMLElement;
+	private children: TreeNode[];
+	private parent: TreeNode | null;
 	private Xmouse: number;
 	private Ymouse: number;
 	private Xpos: number;
@@ -155,7 +194,8 @@ class TreeNode implements SaveSystem {
 
 const canvas = document.getElementById("canvas")
 if (canvas !== null) {
-	new TreeNode(canvas, { text: "1asdfasdfadsf", pos: { x: 50, y: 100 } });
-	new TreeNode(canvas, { text: "2" });
-	new TreeNode(canvas);
+	var one = new TreeNode(canvas, { text: "1asdfasdfadsf", pos: { x: 50, y: 100 } });
+	var two = new TreeNode(canvas, { text: "2" });
+	var three = new TreeNode(canvas);
+	one.addChild(two);
 }
