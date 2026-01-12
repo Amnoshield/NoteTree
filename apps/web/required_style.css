@@ -1,23 +1,33 @@
 .tree-node {
-	/* position: absolute; */
 	position: absolute;
-	cursor: move;
 	top: 0;
     left: 0;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content:center;
+	align-self:baseline;
 }
 .text-wrapper {
-	padding: 0.2em;
-	background-color: black;
+	cursor: move;
+	align-self:center;
 }
 .text {
 	resize: none;
 	field-sizing: content;
 	min-width: 100px;
-	max-width: 200px;
+	max-width: 200px; /* setting? */
 	min-height: 1lh;
 	display: block;
 	/*max-height: 10lh; /* optional or setting? */
 }
-.text.selection-disabled::selection{
+.text.selecion-disabletd::selection{
 	background: rgba(255, 0, 0, 0);
+}
+
+.children {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	justify-content:center;
 }

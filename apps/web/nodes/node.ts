@@ -3,6 +3,51 @@ import type { SaveSystem } from '../SaveSystem';
 
 class TreeNode implements SaveSystem {
 	/**
+	 * Add this TreeNode to the canvas. Must not have parent.
+	 */
+	private addToCanvas(): void {
+		if (this.parent == null)
+			this.canvas.insertAdjacentElement("beforeend", this.wrapper);
+	}
+
+	/**
+	 * Update all children with the width of the widest child
+	 */
+	public updateChildWidth(): void {
+		var widest = 0;
+		this.children.forEach((node: TreeNode) => {
+			var width = node.getWidth();
+			if (width > widest)
+				widest = width;
+		})
+
+		this.children.forEach((node: TreeNode) => {
+			node.updateWidth(widest);
+		})
+	}
+
+	/**
+	 * Update the width this TreeNode takes up before it's children.
+	 * @param width New max width
+	 */
+	public updateWidth(width: number): void {
+		this.textWrapper.style.width = width + "px";
+	}
+
+	/**
+	 * Check to see if the width updated to a new potential max (this could be bigger or smaller)
+	 */
+	private checkWidthUpdate = () => {
+		//const couldBeMax = this.lastTextAreaWidth == this.textWrapper.offsetWidth
+		const widthChanged = this.textArea.offsetWidth !== this.lastTextAreaWidth
+		if (widthChanged && this.parent !== null)
+			this.parent.updateChildWidth();
+		if (widthChanged)
+			this.lastTextAreaWidth = this.textArea.offsetWidth
+
+	}
+
+	/**
 	 * Save data representing all of this TreeNode
 	 * @returns Data representing all of this TreeNode
 	 */
@@ -10,6 +55,7 @@ class TreeNode implements SaveSystem {
 		return JSON.parse('{\
 			"name":"test"\
 		}');
+		//JSON.stringify(this)
 	}
 
 	/**
@@ -26,7 +72,7 @@ class TreeNode implements SaveSystem {
 	 */
 	public setParent(parent: TreeNode): void {
 		this.parent = parent;
-		throw new Error('Method not implemented.');
+		this.wrapper.style.position = "initial";
 	}
 
 	/**
@@ -34,7 +80,9 @@ class TreeNode implements SaveSystem {
 	 * @param parent Parent to remove
 	 */
 	public removeParent(parent: TreeNode): void {
-		throw new Error('Method not implemented.');
+		this.wrapper.style.position = "absolute";
+		this.parent = null;
+		this.addToCanvas();
 	}
 
 	/**
@@ -45,7 +93,7 @@ class TreeNode implements SaveSystem {
 		this.childArea.insertBefore(child.getWrapper(), null);
 		this.children.push(child);
 		child.setParent(this);
-		throw new Error('Method not implemented.');
+		this.updateChildWidth();
 	}
 
 	/**
@@ -57,7 +105,9 @@ class TreeNode implements SaveSystem {
 		if (!this.children.includes(child))
 			return;
 		child.removeParent(this);
-		throw new Error('Method not implemented.');
+		var i = this.children.indexOf(child);
+		this.children.splice(i, 1);
+		this.childArea.removeChild(child.getWrapper());
 	}
 
 	// lock and unlock text editing
@@ -106,11 +156,11 @@ class TreeNode implements SaveSystem {
 	//draging
 	/**
 	 * Start dragging this TreeNode. If the textArea for this node is active exit early.
-	 * @param e mouseEvent
+	 * @param e Mouse event
 	 * @returns void, early exit if the textArea for this node is active
 	 */
 	private startDrag = (e: MouseEvent) => {
-		if (document.activeElement === this.textArea)
+		if (document.activeElement === this.textArea || this.parent !== null)
 			return;
 
 		//e.preventDefault();
@@ -169,6 +219,7 @@ class TreeNode implements SaveSystem {
 	 */
 	constructor(canvas: HTMLElement, options?: { text?: string; pos?: { x: number; y: number } }) {
 		this.parent = null;
+		this.canvas = canvas;
 
 		var text;
 		var pos;
@@ -206,7 +257,7 @@ class TreeNode implements SaveSystem {
 		this.setPos(this.Xpos, this.Ypos);
 		this.wrapper.innerHTML = content;
 		this.wrapper.style.position = "absolute"
-		this.wrapper.addEventListener("mousedown", this.startDrag)
+
 
 		const textAreaCheck = this.wrapper.getElementsByTagName('textarea')[0];
 		if (textAreaCheck !== undefined) // This should always pass
@@ -222,8 +273,16 @@ class TreeNode implements SaveSystem {
 		this.textArea.addEventListener('dblclick', this.dblClick)
 		this.textArea.addEventListener("mousedown", this.trackCaretPosition)
 		this.textArea.classList.toggle("selection-disabled", true);
+		this.textArea.addEventListener("mousedown", this.startDrag)
+		this.lastTextAreaWidth = this.textArea.offsetWidth;
+		this.textArea.addEventListener("input", this.checkWidthUpdate)
 
-		canvas.insertAdjacentElement("beforeend", this.wrapper);
+		const textWrapperCheck = this.wrapper.getElementsByClassName("text-wrapper")[0];
+		if (textWrapperCheck != undefined)
+			this.textWrapper = <HTMLElement>textWrapperCheck;
+		else throw new Error('text-wrapper class not found');
+
+		this.addToCanvas();
 	}
 
 	/**
@@ -234,8 +293,19 @@ class TreeNode implements SaveSystem {
 		return this.wrapper;
 	}
 
+	/**
+	 * Getter for the width of this TreeNode
+	 * @returns The width of this TreeNode
+	 */
+	public getWidth(): number {
+		return this.textArea.offsetWidth;
+	}
+
 	// fields
+	private lastTextAreaWidth: number;
+	private canvas: HTMLElement; // Root element
 	private wrapper: HTMLElement; // wrapper / root HTML element for this TreeNode (Not this tree as a whole).
+	private textWrapper: HTMLElement; // wrapper around the text area.
 	private textArea: HTMLTextAreaElement; // HTML textarea element
 	private childArea: HTMLElement; // HTML element that holds children
 	private children: TreeNode[]; // Array of child nodes in tree.
@@ -251,6 +321,10 @@ const canvas = document.getElementById("canvas")
 if (canvas !== null) {
 	var one = new TreeNode(canvas, { text: "1asdfasdfadsf", pos: { x: 50, y: 100 } });
 	var two = new TreeNode(canvas, { text: "2" });
-	var three = new TreeNode(canvas);
+	var three = new TreeNode(canvas, { text: '3' });
+	var blank = new TreeNode(canvas);
 	one.addChild(two);
+	one.addChild(three);
+	three.addChild(blank);
+	//one.removeChild(three);
 }
