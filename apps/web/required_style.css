@@ -21,7 +21,7 @@
 	display: block;
 	/*max-height: 10lh; /* optional or setting? */
 }
-.text.selecion-disabletd::selection{
+.text.selection-disabled::selection{
 	background: rgba(255, 0, 0, 0);
 }
 

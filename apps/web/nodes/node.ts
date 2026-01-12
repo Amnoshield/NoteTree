@@ -1,5 +1,6 @@
 import template from './node-template.html?raw';
 import type { SaveSystem } from '../SaveSystem';
+import { Tree } from './Tree';
 
 class TreeNode implements SaveSystem {
 	/**
@@ -14,24 +15,65 @@ class TreeNode implements SaveSystem {
 	 * Update all children with the width of the widest child
 	 */
 	public updateChildWidth(): void {
-		var widest = 0;
-		this.children.forEach((node: TreeNode) => {
-			var width = node.getWidth();
-			if (width > widest)
-				widest = width;
-		})
+		if (this.parent !== null) {
+			this.parent.updateChildWidth();
+			return;
+		}
 
-		this.children.forEach((node: TreeNode) => {
-			node.updateWidth(widest);
-		})
+		const widths: Tree = this.getWidthTree();
+
+		var maxWidths: number[] = []
+		var currentDepth = 0
+		while (true) {
+			const data = <number[] | undefined>widths.getDataAtDepth(currentDepth, "width");
+			if (data == undefined)
+				break;
+
+			var widest: number = 0;
+			data.forEach((width: number) => {
+				if (width > widest)
+					widest = width;
+			});
+			maxWidths.push(widest);
+			currentDepth++;
+		}
+
+		const myWidth = maxWidths[0]
+		if (myWidth !== undefined) //This is always true
+			this.updateWidth(myWidth, maxWidths.slice(1))
+
+	}
+
+	/**
+	 * Get a tree containing all widths of all child TreeNodes
+	 * @returns The tree containing all widths of child TreeNodes
+	 */
+	public getWidthTree(): Tree {
+		var myTree = new Tree();
+		myTree.setData("width", this.getWidth());
+		if (this.children.length == 0)
+			return myTree;
+
+		this.children.forEach((child: TreeNode) => {
+			myTree.addChild(child.getWidthTree());
+		});
+		return myTree;
 	}
 
 	/**
 	 * Update the width this TreeNode takes up before it's children.
 	 * @param width New max width
 	 */
-	public updateWidth(width: number): void {
+	public updateWidth(width: number, children:number[]): void {
 		this.textWrapper.style.width = width + "px";
+		if (children.length !== 0) {
+			const nextWidth = children[0]
+			if (nextWidth !== undefined){
+				this.children.forEach((node: TreeNode) => {
+					node.updateWidth(nextWidth, children.slice(1));
+				});
+			}
+		}
 	}
 
 	/**
@@ -39,11 +81,15 @@ class TreeNode implements SaveSystem {
 	 */
 	private checkWidthUpdate = () => {
 		//const couldBeMax = this.lastTextAreaWidth == this.textWrapper.offsetWidth
-		const widthChanged = this.textArea.offsetWidth !== this.lastTextAreaWidth
-		if (widthChanged && this.parent !== null)
+		const widthChanged = this.textArea.offsetWidth !== this.lastTextAreaWidth;
+		if (!widthChanged)
+			return;
+		if (this.parent !== null)
 			this.parent.updateChildWidth();
-		if (widthChanged)
-			this.lastTextAreaWidth = this.textArea.offsetWidth
+		else
+			this.updateChildWidth();
+
+		this.lastTextAreaWidth = this.textArea.offsetWidth;
 
 	}
 
@@ -93,7 +139,7 @@ class TreeNode implements SaveSystem {
 		this.childArea.insertBefore(child.getWrapper(), null);
 		this.children.push(child);
 		child.setParent(this);
-		this.updateChildWidth();
+		//this.updateChildWidth();
 	}
 
 	/**
@@ -227,6 +273,8 @@ class TreeNode implements SaveSystem {
 			text = options.text;
 			pos = options.pos;
 		}
+		if (text == undefined)
+			text = "";
 
 		this.Xpos = 0;
 		this.Ypos = 0;
@@ -245,8 +293,7 @@ class TreeNode implements SaveSystem {
 
 		this.children = [];
 
-		if (text == undefined)
-			text = "";
+
 		var content: string = template.replace('{{ text }}', text);
 
 		this.Xmouse = 0;
@@ -257,7 +304,6 @@ class TreeNode implements SaveSystem {
 		this.setPos(this.Xpos, this.Ypos);
 		this.wrapper.innerHTML = content;
 		this.wrapper.style.position = "absolute"
-
 
 		const textAreaCheck = this.wrapper.getElementsByTagName('textarea')[0];
 		if (textAreaCheck !== undefined) // This should always pass
@@ -298,7 +344,8 @@ class TreeNode implements SaveSystem {
 	 * @returns The width of this TreeNode
 	 */
 	public getWidth(): number {
-		return this.textArea.offsetWidth;
+		const extraWidth = 4
+		return this.textArea.offsetWidth+extraWidth;
 	}
 
 	// fields
@@ -323,8 +370,12 @@ if (canvas !== null) {
 	var two = new TreeNode(canvas, { text: "2" });
 	var three = new TreeNode(canvas, { text: '3' });
 	var blank = new TreeNode(canvas);
+	var four = new TreeNode(canvas, { text: '4' });
+	var five = new TreeNode(canvas, { text: '5' });
 	one.addChild(two);
 	one.addChild(three);
 	three.addChild(blank);
+	two.addChild(four);
+	blank.addChild(five);
 	//one.removeChild(three);
 }
