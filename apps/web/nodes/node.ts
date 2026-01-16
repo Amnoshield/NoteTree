@@ -1,6 +1,5 @@
 import template from './node-template.html?raw';
 import type { SaveSystem } from '../SaveSystem';
-import { Tree } from './Tree';
 
 class TreeNode implements SaveSystem {
 	/**
@@ -20,17 +19,15 @@ class TreeNode implements SaveSystem {
 			return;
 		}
 
-		const widths: Tree = this.getWidthTree();
-
 		var maxWidths: number[] = []
 		var currentDepth = 0
 		while (true) {
-			const data = <number[] | undefined>widths.getDataAtDepth(currentDepth, "width");
-			if (data == undefined)
+			const widths = this.getWidthAtDepth(currentDepth);
+			if (widths == undefined)
 				break;
 
 			var widest: number = 0;
-			data.forEach((width: number) => {
+			widths.forEach((width: number) => {
 				if (width > widest)
 					widest = width;
 			});
@@ -41,23 +38,33 @@ class TreeNode implements SaveSystem {
 		const myWidth = maxWidths[0]
 		if (myWidth !== undefined) //This is always true
 			this.updateWidth(myWidth, maxWidths.slice(1))
-
 	}
 
 	/**
-	 * Get a tree containing all widths of all child TreeNodes
-	 * @returns The tree containing all widths of child TreeNodes
+	 * Get the width from a given depth of this tree. 0 is at this nodes level, 1 is the children of this node.
+	 * @param depth Depth to get the width from. 0 is at this node's level, 1 is the children of this node.
+	 * @returns The width from this node in an array if depth = 0, an array of widths from the given depth, or undefined when no children of this node are at the given depth.
 	 */
-	public getWidthTree(): Tree {
-		var myTree = new Tree();
-		myTree.setData("width", this.getWidth());
-		if (this.children.length == 0)
-			return myTree;
+	private getWidthAtDepth(depth: number): number[] | undefined {
+		if (depth == 0)
+			return [this.getWidth()];
 
+		if (this.children == undefined)
+			return;
+
+		var widths: number[] = []
 		this.children.forEach((child: TreeNode) => {
-			myTree.addChild(child.getWidthTree());
+			var childWidth: number[] | undefined = child.getWidthAtDepth(depth-1);
+			if ( childWidth !== undefined ) {
+				childWidth.forEach((width: number) => {
+					widths.push(width);
+				});
+			}
 		});
-		return myTree;
+
+		if (widths.length == 0)
+			return;
+		return widths;
 	}
 
 	/**
@@ -326,7 +333,14 @@ class TreeNode implements SaveSystem {
 		const textWrapperCheck = this.wrapper.getElementsByClassName("text-wrapper")[0];
 		if (textWrapperCheck != undefined)
 			this.textWrapper = <HTMLElement>textWrapperCheck;
-		else throw new Error('text-wrapper class not found');
+		else
+			throw new Error('text-wrapper class not found');
+
+		const textExtraBoarderCheck = this.wrapper.getElementsByClassName("text-extra-boarder")[0];
+		if (textExtraBoarderCheck != undefined)
+			this.textExtraBoarder = <HTMLElement>textExtraBoarderCheck;
+		else
+			throw new Error('text-extra-boarder class not found');
 
 		this.addToCanvas();
 	}
@@ -344,12 +358,16 @@ class TreeNode implements SaveSystem {
 	 * @returns The width of this TreeNode
 	 */
 	public getWidth(): number {
-		const extraWidth = 4
+
+		//const extraWidth = 4
+		var extraWidth = parseInt(window.getComputedStyle(this.textExtraBoarder, null).getPropertyValue("padding-left"));
+		extraWidth *= 2;
 		return this.textArea.offsetWidth+extraWidth;
 	}
 
 	// fields
 	private lastTextAreaWidth: number;
+	private textExtraBoarder: HTMLElement;
 	private canvas: HTMLElement; // Root element
 	private wrapper: HTMLElement; // wrapper / root HTML element for this TreeNode (Not this tree as a whole).
 	private textWrapper: HTMLElement; // wrapper around the text area.
