@@ -1,5 +1,5 @@
 (function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))s(e);new MutationObserver(e=>{for(const i of e)if(i.type==="childList")for(const a of i.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&s(a)}).observe(document,{childList:!0,subtree:!0});function r(e){const i={};return e.integrity&&(i.integrity=e.integrity),e.referrerPolicy&&(i.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?i.credentials="include":e.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function s(e){if(e.ep)return;e.ep=!0;const i=r(e);fetch(e.href,i)}})();const x=navigator.userAgent;console.log(x);const C=x.toLowerCase().includes("chrom");C||alert(`Your browser might NOT support all features of this app.
-A chrome based browser like Chrome or Heluim is recommended.`);const E=`<div class="text-wrapper">
+A chrome based browser like Chrome or Helium is recommended.`);const E=`<div class="text-wrapper">
 	<div class='text-extra-boarder'>
 		<textarea class="text" readonly>{{ text }}</textarea>
 	</div>
