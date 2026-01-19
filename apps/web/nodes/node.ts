@@ -1,5 +1,8 @@
 import template from './node-template.html?raw';
 import type { SaveSystem } from '../SaveSystem';
+import { Connector } from './connector';
+const childGap = 50;
+
 
 class TreeNode implements SaveSystem {
 	/**
@@ -8,6 +11,18 @@ class TreeNode implements SaveSystem {
 	private addToCanvas(): void {
 		if (this.parent == null)
 			this.canvas.insertAdjacentElement("beforeend", this.wrapper);
+	}
+
+	/**
+	 * Update this connecter and all child connecters
+	 */
+	public updateConnecter(): void {
+		if (this.parentConnector != null)
+			this.parentConnector.update();
+
+		this.children.forEach((child: TreeNode) => {
+			child.updateConnecter();
+		});
 	}
 
 	/**
@@ -72,7 +87,7 @@ class TreeNode implements SaveSystem {
 	 * @param width New max width
 	 */
 	public updateWidth(width: number, children:number[]): void {
-		this.textWrapper.style.width = width + "px";
+		this.connecterArea.style.width = width -this.getWidth() +childGap +"px";
 		if (children.length !== 0) {
 			const nextWidth = children[0]
 			if (nextWidth !== undefined){
@@ -81,6 +96,7 @@ class TreeNode implements SaveSystem {
 				});
 			}
 		}
+		this.updateConnecter();
 	}
 
 	/**
@@ -126,6 +142,7 @@ class TreeNode implements SaveSystem {
 	public setParent(parent: TreeNode): void {
 		this.parent = parent;
 		this.wrapper.style.position = "initial";
+		this.parentConnector = new Connector(this.parent.getTextWrapper(), this.textWrapper, this.parent.getConnecterArea())
 	}
 
 	/**
@@ -136,6 +153,10 @@ class TreeNode implements SaveSystem {
 		this.wrapper.style.position = "absolute";
 		this.parent = null;
 		this.addToCanvas();
+		if (this.parentConnector != null) {
+			this.parentConnector.removeParent();
+			this.parentConnector = null;
+		}
 	}
 
 	/**
@@ -146,7 +167,8 @@ class TreeNode implements SaveSystem {
 		this.childArea.insertBefore(child.getWrapper(), null);
 		this.children.push(child);
 		child.setParent(this);
-		//this.updateChildWidth();
+		this.updateChildWidth();
+		this.updateConnecter();
 	}
 
 	/**
@@ -161,6 +183,8 @@ class TreeNode implements SaveSystem {
 		var i = this.children.indexOf(child);
 		this.children.splice(i, 1);
 		this.childArea.removeChild(child.getWrapper());
+
+		this.updateConnecter();
 	}
 
 	// lock and unlock text editing
@@ -272,6 +296,7 @@ class TreeNode implements SaveSystem {
 	 */
 	constructor(canvas: HTMLElement, options?: { text?: string; pos?: { x: number; y: number } }) {
 		this.parent = null;
+		this.parentConnector = null;
 		this.canvas = canvas;
 
 		var text;
@@ -326,7 +351,6 @@ class TreeNode implements SaveSystem {
 		this.textArea.addEventListener('dblclick', this.dblClick)
 		this.textArea.addEventListener("mousedown", this.trackCaretPosition)
 		this.textArea.classList.toggle("selection-disabled", true);
-		this.textArea.addEventListener("mousedown", this.startDrag)
 		this.lastTextAreaWidth = this.textArea.offsetWidth;
 		this.textArea.addEventListener("input", this.checkWidthUpdate)
 
@@ -343,6 +367,15 @@ class TreeNode implements SaveSystem {
 			throw new Error('text-extra-boarder class not found');
 
 		this.addToCanvas();
+
+		const checkConnecterArea = this.wrapper.getElementsByClassName("connecters")[0];
+		if (checkConnecterArea != undefined)
+			this.connecterArea = <HTMLElement>checkConnecterArea;
+		else
+			throw new Error('Connecters class not found');
+
+		//this.textArea.addEventListener("mousedown", this.startDrag)
+		this.wrapper.addEventListener("mousedown", this.startDrag);
 	}
 
 	/**
@@ -351,6 +384,22 @@ class TreeNode implements SaveSystem {
 	 */
 	public getWrapper(): HTMLElement {
 		return this.wrapper;
+	}
+
+	/**
+	 * Getter for the text wrapper for this TreeNode
+	 * @returns The text wrapper for this TreeNode
+	 */
+	public getTextWrapper(): HTMLElement {
+		return this.textWrapper;
+	}
+
+	/**
+	 * Getter for the connecter area for this node
+	 * @returns The connecter area for this node
+	 */
+	public getConnecterArea(): HTMLElement {
+		return this.connecterArea;
 	}
 
 	/**
@@ -367,6 +416,7 @@ class TreeNode implements SaveSystem {
 
 	// fields
 	private lastTextAreaWidth: number;
+	private connecterArea: HTMLElement; // HTML element that holds connectors
 	private textExtraBoarder: HTMLElement;
 	private canvas: HTMLElement; // Root element
 	private wrapper: HTMLElement; // wrapper / root HTML element for this TreeNode (Not this tree as a whole).
@@ -379,6 +429,7 @@ class TreeNode implements SaveSystem {
 	private Ymouse: number; // Y pos of mouse. Initialized at 0
 	private Xpos: number; // X pos of TreeNode
 	private Ypos: number; // Y pos of TreeNode
+	private parentConnector: Connector | null; // The connecter from the parent to this TreeNode.
 }
 
 
@@ -395,5 +446,9 @@ if (canvas !== null) {
 	three.addChild(blank);
 	two.addChild(four);
 	blank.addChild(five);
+	for (var i=0; i<5; i++) {
+		var child = new TreeNode(canvas);
+		one.addChild(child);
+	}
 	//one.removeChild(three);
 }

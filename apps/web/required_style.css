@@ -35,3 +35,12 @@
 .alert {
 	background-color: red;
 }
+
+.connecters {
+	width: 0;
+	height: 0;
+}
+
+svg {
+	pointer-events: none;
+}
