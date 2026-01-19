@@ -12,15 +12,39 @@ export class Connector {
 	 * @param radius Radius of turns
 	 * @returns Path
 	 */
-	private orthogonalPath(p1:Point, p2:Point, radius:number = 8): string {
-		const midX = (p1.x + p2.x) / 2;
+	private orthogonalPath(startPoint:Point, endPoint:Point, radius:number = 8): string {
+		const horizontalDistance = endPoint.x - startPoint.x;
+		const verticalDistance = endPoint.y - startPoint.y;
+
+		// Vertical direction must never be 0 or curves collapse
+		const verticalDirection =
+			verticalDistance === 0 ? 1 : Math.sign(verticalDistance);
+
+		// Radius must fit within both horizontal and vertical space
+		const effectiveRadius = Math.min(
+			Math.abs(horizontalDistance) / 2,
+			Math.abs(verticalDistance) / 2,
+			radius
+		);
+
+		// If there's no room for bends, fall back to a straight line
+		if (effectiveRadius < 1) {
+			return `M ${startPoint.x} ${startPoint.y}
+					L ${endPoint.x} ${endPoint.y}`;
+		}
+
+		// Shared horizontal spine for overlapping edges
+		const spineX = startPoint.x + horizontalDistance / 2;
+
 		return `
-			M ${p1.x} ${p1.y}
-			H ${midX - radius}
-			Q ${midX} ${p1.y} ${midX} ${p1.y + Math.sign(p2.y - p1.y) * radius}
-			V ${p2.y - Math.sign(p2.y - p1.y) * radius}
-			Q ${midX} ${p2.y} ${midX + radius} ${p2.y}
-			H ${p2.x}
+			M ${startPoint.x} ${startPoint.y}
+			H ${spineX - effectiveRadius}
+			Q ${spineX} ${startPoint.y}
+			${spineX} ${startPoint.y + verticalDirection * effectiveRadius}
+			V ${endPoint.y - verticalDirection * effectiveRadius}
+			Q ${spineX} ${endPoint.y}
+			${spineX + effectiveRadius} ${endPoint.y}
+			H ${endPoint.x}
 		`;
 	}
 
@@ -38,10 +62,10 @@ export class Connector {
 
 		const offset = this.getSvgOffset();
 
-		var pointX = bounds.left+ bounds.width/2 -offset.x;
-		pointX += (bounds.width/2) *relativeLocation.x;
-		var pointY = bounds.top+ bounds.height/2 -offset.y;
-		pointY += (bounds.height/2) *relativeLocation.y;
+		var pointX = element.offsetLeft+ element.offsetWidth/2// -offset.x;
+		pointX += (element.offsetWidth/2) *relativeLocation.x;
+		var pointY = element.offsetTop+ element.offsetHeight/2// -offset.y;
+		pointY += (element.offsetHeight/2) *relativeLocation.y;
 
 		return {
 			x: pointX,
@@ -92,6 +116,24 @@ export class Connector {
 			this.orthogonalPath(this.getPoint(this.from, {x:1, y:0}), this.getPoint(this.to, {x:-1, y:0}))
 		);
 		this.svg.appendChild(this.path);
+
+		this.updateSVG(this.svg, this.path);
+
+	}
+
+	private updateSVG(svg: SVGSVGElement, path:SVGPathElement) {
+		const pathBbox = path.getBBox();
+		svg.setAttribute("width", pathBbox.width + "px");
+		svg.setAttribute("height", pathBbox.height+30 + "px");
+		svg.setAttribute("viewBox", `${pathBbox.x} ${pathBbox.y} ${pathBbox.width} ${pathBbox.height+15}`);
+
+		var yoffset = this.from.offsetTop+this.from.offsetHeight/2-8;
+		const above = yoffset < this.to.offsetTop+this.to.offsetHeight/2;
+
+		if (above)
+			svg.style.top = yoffset+'px';
+		else
+			svg.style.top = yoffset-pathBbox.height+'px';
 	}
 
 	constructor(from: HTMLElement, to: HTMLElement, parent: HTMLElement) {

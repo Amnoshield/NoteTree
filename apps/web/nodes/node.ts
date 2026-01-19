@@ -25,6 +25,27 @@ class TreeNode implements SaveSystem {
 		});
 	}
 
+	public updateHeight(): void {
+		if (this.parentConnector != null)
+			this.updateConnecter();
+		else {
+			this.children.forEach((child: TreeNode) => {
+				child.updateConnecter();
+			});
+		}
+
+		if (this.parent != null)
+			this.parent.updateHeight();
+	}
+
+	private checkHeightUpdate = () => {
+		const currentHeight = this.textArea.offsetHeight;
+		if (currentHeight != this.lastTextAreaHeight) {
+			this.lastTextAreaHeight = currentHeight;
+			this.updateHeight();
+		}
+	}
+
 	/**
 	 * Update all children with the width of the widest child
 	 */
@@ -96,7 +117,6 @@ class TreeNode implements SaveSystem {
 				});
 			}
 		}
-		this.updateConnecter();
 	}
 
 	/**
@@ -143,6 +163,7 @@ class TreeNode implements SaveSystem {
 		this.parent = parent;
 		this.wrapper.style.position = "initial";
 		this.parentConnector = new Connector(this.parent.getTextWrapper(), this.textWrapper, this.parent.getConnecterArea())
+		this.updateConnecter();
 	}
 
 	/**
@@ -157,6 +178,7 @@ class TreeNode implements SaveSystem {
 			this.parentConnector.removeParent();
 			this.parentConnector = null;
 		}
+		this.updateConnecter();
 	}
 
 	/**
@@ -182,7 +204,7 @@ class TreeNode implements SaveSystem {
 		child.removeParent(this);
 		var i = this.children.indexOf(child);
 		this.children.splice(i, 1);
-		this.childArea.removeChild(child.getWrapper());
+		//this.childArea.removeChild(child.getWrapper());
 
 		this.updateConnecter();
 	}
@@ -352,7 +374,9 @@ class TreeNode implements SaveSystem {
 		this.textArea.addEventListener("mousedown", this.trackCaretPosition)
 		this.textArea.classList.toggle("selection-disabled", true);
 		this.lastTextAreaWidth = this.textArea.offsetWidth;
+		this.lastTextAreaHeight = this.textArea.offsetHeight;
 		this.textArea.addEventListener("input", this.checkWidthUpdate)
+		this.textArea.addEventListener("input", this.checkHeightUpdate)
 
 		const textWrapperCheck = this.wrapper.getElementsByClassName("text-wrapper")[0];
 		if (textWrapperCheck != undefined)
@@ -416,6 +440,7 @@ class TreeNode implements SaveSystem {
 
 	// fields
 	private lastTextAreaWidth: number;
+	private lastTextAreaHeight: number;
 	private connecterArea: HTMLElement; // HTML element that holds connectors
 	private textExtraBoarder: HTMLElement;
 	private canvas: HTMLElement; // Root element
@@ -450,5 +475,5 @@ if (canvas !== null) {
 		var child = new TreeNode(canvas);
 		one.addChild(child);
 	}
-	//one.removeChild(three);
+	one.removeChild(three);
 }
