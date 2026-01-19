@@ -7,9 +7,9 @@
 	flex-wrap: nowrap;
 	justify-content:center;
 	align-self:baseline;
+	cursor: move;
 }
 .text-wrapper {
-	cursor: move;
 	align-self:center;
 }
 .text {
