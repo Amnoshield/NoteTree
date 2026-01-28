@@ -5,7 +5,7 @@ A tree / mindmap style note taking app
 # TODO (In no particular order):
 - canvas
   - Add full canvas drag
-  - Add full canvas zoom
+  - Add full canvas zoom (This should be independent of screen / window size)
   - Add automatic canvas drag / zoom to focused / selected node
   - Add saving & loading
     - Keep track of what node was selected
