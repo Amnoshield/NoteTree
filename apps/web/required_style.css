@@ -8,9 +8,11 @@
 	justify-content:center;
 	align-self:baseline;
 	cursor: move;
+	pointer-events: none;
 }
 .text-wrapper {
 	align-self:center;
+	pointer-events: all;
 }
 .text {
 	resize: none;
@@ -37,5 +39,5 @@
 }
 
 svg {
-	pointer-events: none;
+	pointer-events: all;
 }
