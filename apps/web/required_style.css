@@ -34,10 +34,6 @@
 	justify-content:center;
 }
 
-.alert {
-	background-color: red;
-}
-
 svg {
 	pointer-events: all;
 }
