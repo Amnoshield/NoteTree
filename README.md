@@ -40,5 +40,9 @@ A tree / mindmap style note taking app
     - Load custom css
   - Open other canvases in the same folder
   - Open folder with canvases in it
+- Textarea
+  - Add word wrap icon for an extended line
 - After the basics are in place:
   - Add Helix inspired textarea
+  - Add word wrap icon for an extended line
+  - Make option for wrapped lines to count towards relative line count display
