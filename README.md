@@ -5,7 +5,8 @@ A tree / mindmap style note taking app
 # TODO (In no particular order):
 - canvas
   - Add full canvas drag
-  - Add full canvas zoom
+  - Add full canvas zoom (This should be independent of screen / window size)
+  - Add automatic canvas drag / zoom to focused / selected node
   - Add saving & loading
     - Keep track of what node was selected
   - Add input handling
@@ -28,14 +29,14 @@ A tree / mindmap style note taking app
     - when a node is added children must be shown
     - add recursive hiding (so the child nodes will also collapse their children)
   - **low priority:** Add drag from point to add child node (mostly for the normies)
-  - Add multi select dragging
+  - Add multi-select dragging
   - Add changing order (swapping positions in the DOM with prev or next sibling)
     - What to do when at limit of current parent
       - Follow the same rules as traversing nodes?
 - General
   - Add settings
     - Control all node spacing
-    - node width and hight
+    - node width and height
     - Arrow settings? (i.e. color, width, radius)
     - Load custom css
   - Open other canvases in the same folder
