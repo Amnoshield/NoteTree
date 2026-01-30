@@ -239,6 +239,7 @@ class TreeNode implements SaveSystem {
 		this.textArea.blur()
 		this.wrapper.focus()
 		this.textArea.classList.toggle("selection-disabled", true);
+		console.log(this.textArea.value); // The new data
 	}
 
 	/**
