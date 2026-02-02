@@ -38,7 +38,7 @@ export class Connector {
 
 		return `
 			M ${startPoint.x} ${startPoint.y}
-			H ${spineX - effectiveRadius}
+			H ${spineX - 0}
 			Q ${spineX} ${startPoint.y}
 			${spineX} ${startPoint.y + verticalDirection * effectiveRadius}
 			V ${endPoint.y - verticalDirection * effectiveRadius}
