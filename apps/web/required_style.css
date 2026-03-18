@@ -21,10 +21,9 @@
 	max-width: 200px; /* setting? */
 	min-height: 1lh;
 	display: block;
+	border-style:none;
+	outline: none;
 	/*max-height: 10lh; /* optional or setting? */
-}
-.text.selection-disabled::selection{
-	background: rgba(255, 0, 0, 0);
 }
 
 .children {

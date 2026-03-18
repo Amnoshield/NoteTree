@@ -1,3 +1,5 @@
+import { TreeNode } from './nodes/node';
+
 class Controller {
     /**
      * Dispatch an event
@@ -84,14 +86,34 @@ class Controller {
         this.binds.set(key, event_name)
     }
 
-    constructor() {
+    /**
+     * Set the currently active node
+     * @param node Note to set as active
+     */
+    public setActiveNode(node:TreeNode) {
+        this.active_node.deActivate()
+        this.active_node = node
+        this.active_node.Activate()
+    }
+
+    constructor(active_node:TreeNode) {
         this.event_el = document.createElement('div');
         this.binds = new Map();
         document.addEventListener("keypress", this.handleKeys)
+        this.active_node = active_node 
+    }
+
+    /**
+     * Getter for the currently active node
+     * @returns The currently active node
+     */
+    public getActiveNode() {
+        return this.active_node
     }
 
     private binds:Map<string, string>
     private event_el: HTMLElement
+    private active_node:TreeNode
 }
 
 interface controller_events {
@@ -116,7 +138,7 @@ declare global {
     interface Event extends controllerEvent { }
 }
 
-
+/*
 var controller = new Controller()
 let test_listener = (e: Event) => {
     console.log("received event " + e + " with repetitions: " + e.detail.repetitions)
@@ -129,3 +151,4 @@ controller.dispatchEvent("create child")
 controller.addBind("A0101", "create child")
 controller.addEventListener("create child", (e:Event)=>{console.log("Create child triggered")})
 
+*/
